@@ -1,0 +1,109 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Eoseureum 공통 Blue 색상 토큰 (로그인 Hero · Sidebar 공용) ───────────────── */
+:root {
+  --eoseureum-blue-navy: #062f7a;
+  --eoseureum-blue-primary: #0057c8;
+  --eoseureum-blue-bright: #0875e1;
+  --eoseureum-blue-deep: #003c9e;
+  --eoseureum-bg-light: #f8fbff;
+}
+
+@layer base {
+  body {
+    font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background-color: #F8F9FB;   /* Ivory Security Lab canvas */
+    color: #111827;              /* ink */
+  }
+}
+
+@layer components {
+  /* 카드 / 패널 — 흰색 + 은은한 테두리·그림자 */
+  .il-card {
+    @apply bg-white border border-hairline rounded-2xl shadow-card;
+  }
+
+  /* Primary 액션 버튼 */
+  .il-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5
+           text-sm font-semibold text-white shadow-primary transition-colors
+           hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* 보조(아웃라인) 버튼 */
+  .il-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-hairline
+           bg-white px-4 py-2.5 text-sm font-semibold text-ink transition-colors
+           hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* 입력 필드 */
+  .il-input {
+    @apply w-full rounded-lg border border-hairline bg-white px-3.5 py-2.5 text-sm text-ink
+           placeholder:text-gray-400 outline-none transition-colors
+           focus:border-primary focus:ring-2 focus:ring-primary/20;
+  }
+
+  /* 배지 (기본) */
+  .il-badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+}
+
+@layer utilities {
+  /* 밝은 테마용 은은한 블루/아이보리 radial gradient (로그인 배경) */
+  .il-auth-bg {
+    background-color: #F8F9FB;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 25% 35%, rgba(30,58,138,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 70% at 90% 90%, rgba(245,158,11,0.05) 0%, transparent 55%);
+  }
+  .il-grid-bg {
+    background-image:
+      linear-gradient(rgba(30,58,138,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(30,58,138,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* Eoseureum 브랜드 그라디언트 — 대시보드 헤더와 동일(제품군 통일). 단일 출처로 관리. */
+  .eoseureum-brand-gradient {
+    background: linear-gradient(135deg, #1A6FD4 0%, #1054AB 100%);
+  }
+  /* 로그인 우측(화이트) 영역 배경: 매우 연한 grid + radial glow + dot */
+  .eoseureum-login-bg {
+    background-color: #F8F9FB;
+    background-image:
+      radial-gradient(ellipse 60% 50% at 80% 25%, rgba(30,93,184,0.06) 0%, transparent 60%),
+      radial-gradient(circle at 1px 1px, rgba(30,93,184,0.05) 1px, transparent 0),
+      linear-gradient(rgba(30,58,138,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(30,58,138,0.03) 1px, transparent 1px);
+    background-size: auto, 22px 22px, 44px 44px, 44px 44px;
+  }
+
+  /* ── Eoseureum 공통 Blue Gradient (로그인 Hero) ───────────────────────────── */
+  .eoseureum-hero-gradient {
+    background:
+      radial-gradient(circle at 75% 45%, rgba(32, 132, 255, 0.28), transparent 34%),
+      linear-gradient(135deg, #062f7a 0%, #0057c8 48%, #0875e1 100%);
+  }
+  /* ── Sidebar Gradient (로그인 후 좌측 메뉴) ──────────────────────────── */
+  .eoseureum-sidebar-gradient {
+    background:
+      radial-gradient(circle at 80% 20%, rgba(32, 132, 255, 0.22), transparent 32%),
+      linear-gradient(160deg, #062f7a 0%, #0057c8 52%, #0875e1 100%);
+  }
+  /* ── 우측 로그인 영역 grid 배경 ─────────────────────────────────────── */
+  .eoseureum-login-grid {
+    background-color: #f8fbff;
+    background-image:
+      linear-gradient(rgba(20, 50, 90, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20, 50, 90, 0.045) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+}

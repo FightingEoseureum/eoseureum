@@ -1,0 +1,192 @@
+{
+  "SQL_INJECTION": {
+    "remediation": [
+      "모든 동적 쿼리를 Prepared Statement / 파라미터 바인딩으로 전환한다.",
+      "ORM 사용 시에도 raw 쿼리·문자열 결합을 금지하고 안전 API만 사용한다.",
+      "정렬 컬럼·테이블명 등 바인딩 불가 요소는 화이트리스트로 검증한다.",
+      "DB 계정에 최소 권한(필요 테이블/명령만)을 부여한다.",
+      "DB 오류 메시지를 사용자에게 노출하지 않고 일반 메시지로 대체한다."
+    ],
+    "additional_verification": [
+      "동일 페이로드를 3회 이상 반복해 응답 일관성을 측정하고 캐시/랜덤 요인을 배제한다.",
+      "time-based 페이로드로 의도한 지연이 재현되는지 확인한다.",
+      "WAF 우회(인코딩/주석) 시 동작 변화가 유지되는지 점검한다."
+    ]
+  },
+  "REFLECTED_XSS": {
+    "remediation": [
+      "출력 컨텍스트(HTML 본문/속성/JS/URL)별 인코딩을 적용한다.",
+      "입력은 허용 목록 기반으로 검증한다.",
+      "Content-Security-Policy 로 인라인 스크립트와 외부 출처를 제한한다."
+    ],
+    "additional_verification": [
+      "반사 위치가 실행 가능한 컨텍스트인지 PoC로 확인한다.",
+      "WAF/필터 우회 페이로드로 재현성을 점검한다."
+    ]
+  },
+  "STORED_XSS": {
+    "remediation": [
+      "저장 시 서버측 HTML 새니타이저로 허용 태그만 남긴다.",
+      "출력 시 컨텍스트 인코딩을 추가로 적용한다.",
+      "쿠키 HttpOnly 설정 및 CSP 를 적용한다."
+    ],
+    "additional_verification": [
+      "별도 계정/세션으로 저장 항목을 조회해 실행을 확인한다.",
+      "관리자 화면 등 권한 상승 경로 영향을 평가한다."
+    ]
+  },
+  "LFI": {
+    "remediation": [
+      "사용자 입력을 파일 경로로 직접 사용하지 않는다.",
+      "id→실제 파일 고정 매핑 또는 허용 디렉터리 화이트리스트를 사용한다.",
+      "realpath 로 정규화 후 베이스 디렉터리 이탈을 차단한다."
+    ],
+    "additional_verification": [
+      "%2e%2e, 더블 인코딩, null byte 등 우회 페이로드를 시험한다.",
+      "노출 파일이 시스템 파일/소스/시크릿인지 내용으로 확인한다."
+    ]
+  },
+  "SSRF": {
+    "remediation": [
+      "URL 입력에 스킴·호스트 화이트리스트 검증을 적용한다.",
+      "사설/링크로컬/메타데이터(169.254.169.254) 대역으로의 송신을 차단한다.",
+      "DNS 리바인딩 방어와 리다이렉트 추적 제한을 적용한다."
+    ],
+    "additional_verification": [
+      "out-of-band 콜백 서버로 서버발 요청을 실증한다.",
+      "리다이렉트·DNS 리바인딩을 통한 내부 접근 우회를 점검한다."
+    ]
+  },
+  "CLICKJACKING": {
+    "remediation": [
+      "X-Frame-Options: DENY (필요 시 SAMEORIGIN) 를 적용한다.",
+      "CSP frame-ancestors 'none'(또는 신뢰 출처) 를 설정한다.",
+      "이체·관리·설정 등 민감 페이지에 우선 적용한다."
+    ],
+    "additional_verification": [
+      "민감 페이지가 외부 iframe 으로 실제 로드되는 PoC 를 작성한다.",
+      "XFO 와 CSP frame-ancestors 의 중복/우선순위를 확인한다."
+    ]
+  },
+  "TRACE_METHOD": {
+    "remediation": [
+      "TRACE/TRACK 메서드를 웹 서버/WAS 에서 비활성화한다.",
+      "필요한 메서드만 화이트리스트로 허용한다.",
+      "PUT/DELETE 가 불필요하면 차단하고, 필요 시 인증·경로를 제한한다."
+    ],
+    "additional_verification": [
+      "TRACE 요청의 요청 echo 반환 여부를 확인한다.",
+      "PUT 으로 임시 파일 업로드 후 접근 가능성을 실증한다(권한 범위 내)."
+    ]
+  },
+  "SERVER_HEADER": {
+    "remediation": [
+      "Server/X-Powered-By 헤더에서 버전을 제거하거나 헤더를 비활성화한다.",
+      "Apache ServerTokens Prod, Nginx server_tokens off 를 설정한다.",
+      "PHP expose_php = Off, Tomcat server 정보 변경을 적용한다."
+    ],
+    "additional_verification": [
+      "노출 버전을 CVE 와 대조해 실제 취약 여부를 평가한다.",
+      "에러 페이지 등 다른 응답에서의 버전 노출을 추가 점검한다."
+    ]
+  },
+  "ERROR_PAGE_DISCLOSURE": {
+    "remediation": [
+      "운영 환경 디버그 모드를 비활성화한다.",
+      "표준 커스텀 에러 페이지(4xx/5xx)를 적용한다.",
+      "상세 예외는 서버 로그로만 기록한다."
+    ],
+    "additional_verification": [
+      "비정상 입력으로 5xx 를 유발해 응답 본문 노출을 점검한다.",
+      "노출된 경로·프레임워크 정보의 후속 악용 가능성을 평가한다."
+    ]
+  },
+  "CORS_MISCONFIG": {
+    "remediation": [
+      "Access-Control-Allow-Origin 을 고정 신뢰 도메인 화이트리스트로 제한한다.",
+      "Allow-Credentials: true 일 때 와일드카드/Origin 반사를 금지한다.",
+      "null Origin 을 거부한다."
+    ],
+    "additional_verification": [
+      "임의 Origin 으로 ACAO 반사 여부를 테스트한다.",
+      "자격증명 포함 교차 출처 요청으로 민감 응답 접근 가능성을 PoC 한다."
+    ]
+  },
+  "ADMIN_INTERFACE": {
+    "remediation": [
+      "관리 인터페이스를 인터넷에서 분리(VPN/IP 화이트리스트)한다.",
+      "강력한 인증·다중 인증을 적용하고 기본 계정을 제거한다.",
+      "관리 경로 접근을 로깅·알림한다."
+    ],
+    "additional_verification": [
+      "기본/약한 자격증명 로그인 가능성을 시험한다(권한 범위 내).",
+      "인증 우회·관리 기능 직접 호출 가능성을 확인한다."
+    ]
+  },
+  "ACTUATOR_EXPOSURE": {
+    "remediation": [
+      "management.endpoints.web.exposure.include 를 health 등으로 최소화한다.",
+      "Actuator 에 인증·인가를 적용하고 별도 포트로 분리한다.",
+      "env/heapdump/jolokia 등 민감 엔드포인트를 비공개로 한다."
+    ],
+    "additional_verification": [
+      "env/heapdump 에서 실제 시크릿 값 노출을 확인한다.",
+      "jolokia/gateway 의 RCE 가능성을 점검한다."
+    ]
+  },
+  "ENV_EXPOSURE": {
+    "remediation": [
+      ".env 를 웹 루트 밖으로 이동하고 직접 접근을 차단한다.",
+      "노출된 모든 시크릿을 즉시 폐기·재발급한다.",
+      "시크릿을 시크릿 매니저/환경으로 관리한다."
+    ],
+    "additional_verification": [
+      "응답 본문에 실제 KEY=VALUE 시크릿 포함을 확인한다.",
+      "노출 자격증명의 유효성을 권한 범위 내에서 점검한다."
+    ]
+  },
+  "GIT_EXPOSURE": {
+    "remediation": [
+      "웹 서버에서 .git 디렉터리 접근을 차단한다.",
+      "배포물에 .git 이 포함되지 않도록 빌드/아티팩트를 정리한다.",
+      "이력에 포함된 시크릿을 폐기·재발급한다."
+    ],
+    "additional_verification": [
+      ".git/config 및 HEAD 의 실제 git 콘텐츠를 확인한다.",
+      "소스 복원 가능 여부와 시크릿 포함을 점검한다."
+    ]
+  },
+  "BACKUP_FILE": {
+    "remediation": [
+      "웹 루트에서 백업/임시 파일을 제거한다.",
+      "백업 확장자(.bak/.old/.zip 등)에 대한 직접 접근을 차단한다.",
+      "배포 파이프라인에서 백업 파일 산출을 방지한다."
+    ],
+    "additional_verification": [
+      "다운로드 파일 내 시크릿/소스 포함을 확인한다.",
+      "연관 경로의 추가 백업 파일을 탐색한다."
+    ]
+  },
+  "SWAGGER_EXPOSURE": {
+    "remediation": [
+      "운영 환경에서 Swagger/OpenAPI 문서를 비활성화하거나 인증으로 보호한다.",
+      "내부 전용 문서의 외부 노출 경로를 차단한다.",
+      "문서에 명시된 엔드포인트의 인가를 점검한다."
+    ],
+    "additional_verification": [
+      "문서상 엔드포인트의 무인증 호출 가능성을 확인한다.",
+      "관리/민감 기능 포함 여부를 점검한다."
+    ]
+  },
+  "GRAPHQL_EXPOSURE": {
+    "remediation": [
+      "운영에서 인트로스펙션과 GraphiQL/Playground 를 비활성화한다.",
+      "필드/뮤테이션 단위 인가를 적용한다.",
+      "쿼리 깊이·복잡도를 제한한다."
+    ],
+    "additional_verification": [
+      "인트로스펙션으로 민감 뮤테이션 존재를 확인한다.",
+      "무인증 민감 쿼리 실행 가능성을 점검한다."
+    ]
+  }
+}

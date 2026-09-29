@@ -1,0 +1,58 @@
+# Eoseureum Report Theme System — DOCX/HTML 공용 테마 설정.
+# 활성 테마: env REPORT_THEME (기본 corporate_blue).
+themes:
+  corporate_blue:
+    primary_color: "1E3A5F"
+    secondary_color: "2563EB"
+    accent_color: "0E9488"
+    background_color: "0F2A43"
+    font_family: "맑은 고딕"
+    cover_style: "dark_gradient"
+    card_style: "shadow_rounded"
+    severity_colors: {Critical: "DC2626", High: "EA580C", Medium: "CA8A04", Low: "2563EB", Info: "6B7280"}
+  dark_security:
+    primary_color: "0B1220"
+    secondary_color: "38BDF8"
+    accent_color: "22D3EE"
+    background_color: "020617"
+    font_family: "맑은 고딕"
+    cover_style: "cyber_grid"
+    card_style: "glow"
+    severity_colors: {Critical: "F87171", High: "FB923C", Medium: "FACC15", Low: "38BDF8", Info: "94A3B8"}
+  executive_black:
+    primary_color: "111111"
+    secondary_color: "B08D57"
+    accent_color: "B08D57"
+    background_color: "111111"
+    font_family: "맑은 고딕"
+    cover_style: "minimal_dark"
+    card_style: "line"
+    severity_colors: {Critical: "C0392B", High: "D35400", Medium: "B7950B", Low: "34495E", Info: "7F8C8D"}
+  minimal_white:
+    primary_color: "1F2937"
+    secondary_color: "2563EB"
+    accent_color: "059669"
+    background_color: "FFFFFF"
+    font_family: "맑은 고딕"
+    cover_style: "minimal_light"
+    card_style: "flat"
+    severity_colors: {Critical: "DC2626", High: "EA580C", Medium: "CA8A04", Low: "2563EB", Info: "9CA3AF"}
+  cyber_grid:
+    primary_color: "0F172A"
+    secondary_color: "22D3EE"
+    accent_color: "A855F7"
+    background_color: "0F172A"
+    font_family: "맑은 고딕"
+    cover_style: "cyber_grid"
+    card_style: "glow"
+    severity_colors: {Critical: "EF4444", High: "F97316", Medium: "EAB308", Low: "06B6D4", Info: "64748B"}
+  deep_navy:
+    primary_color: "1E3A5F"
+    secondary_color: "2563EB"
+    accent_color: "16A34A"
+    background_color: "1E3A5F"
+    font_family: "맑은 고딕"
+    cover_style: "dark_gradient"
+    card_style: "shadow_rounded"
+    severity_colors: {Critical: "DC2626", High: "EA580C", Medium: "CA8A04", Low: "2563EB", Info: "6B7280"}
+default: corporate_blue

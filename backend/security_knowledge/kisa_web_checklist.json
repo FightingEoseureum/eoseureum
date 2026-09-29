@@ -1,0 +1,19 @@
+[
+  {"id": "SQL_INJECTION", "kisa_code": "WEB-DI", "title": "SQL 인젝션"},
+  {"id": "REFLECTED_XSS", "kisa_code": "WEB-XSS", "title": "크로스사이트 스크립트 (반사형)"},
+  {"id": "STORED_XSS", "kisa_code": "WEB-XSS", "title": "크로스사이트 스크립트 (저장형)"},
+  {"id": "LFI", "kisa_code": "WEB-PT", "title": "디렉터리 탐색 / 파일 인클루전"},
+  {"id": "SSRF", "kisa_code": "WEB-SSRF", "title": "서버 사이드 요청 위조"},
+  {"id": "CLICKJACKING", "kisa_code": "WEB-CJ", "title": "클릭재킹"},
+  {"id": "TRACE_METHOD", "kisa_code": "WEB-MM", "title": "불필요한 메서드 허용"},
+  {"id": "SERVER_HEADER", "kisa_code": "WEB-ID", "title": "정보 노출 (서버 버전)"},
+  {"id": "ERROR_PAGE_DISCLOSURE", "kisa_code": "WEB-ER", "title": "에러 처리 / 정보 노출"},
+  {"id": "CORS_MISCONFIG", "kisa_code": "WEB-CORS", "title": "교차 출처 자원 공유 설정 오류"},
+  {"id": "ADMIN_INTERFACE", "kisa_code": "WEB-AC", "title": "관리자 페이지 접근 통제"},
+  {"id": "SWAGGER_EXPOSURE", "kisa_code": "WEB-ID", "title": "API 문서 정보 노출"},
+  {"id": "GRAPHQL_EXPOSURE", "kisa_code": "WEB-ID", "title": "GraphQL 정보 노출"},
+  {"id": "ACTUATOR_EXPOSURE", "kisa_code": "WEB-ID", "title": "관리 콘솔 정보 노출 (Actuator)"},
+  {"id": "BACKUP_FILE", "kisa_code": "WEB-FD", "title": "불필요한 파일 노출 (백업)"},
+  {"id": "ENV_EXPOSURE", "kisa_code": "WEB-FD", "title": "설정 파일 노출 (.env)"},
+  {"id": "GIT_EXPOSURE", "kisa_code": "WEB-FD", "title": "소스/형상관리 정보 노출 (.git)"}
+]

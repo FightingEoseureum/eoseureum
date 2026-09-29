@@ -1,0 +1,19 @@
+{
+  "_comment": "솔로 모드 — 단일 대형 모델(qwen2.5:72b)이 모든 역할을 담당. 앙상블 판정 미사용. 모델이 없으면 fallback_model 로 자동 대체됩니다.",
+  "enabled": true,
+  "fallback_model": "qwen2.5:7b",
+  "roles": {
+    "analysis":        { "model": "qwen2.5:72b", "note": "취약점 분석·서사" },
+    "poc":             { "model": "qwen2.5:72b", "note": "PoC/exploit 코드" },
+    "crawl":           { "model": "qwen2.5:72b", "note": "크롤·발견 판단" },
+    "probe_priority":  { "model": "qwen2.5:72b", "note": "프로브 우선순위 판단" },
+    "fp_judge":        { "model": "qwen2.5:72b", "note": "오탐 판정(단일 모델)" }
+  },
+  "fp_judge_ensemble": {
+    "enabled": false,
+    "panel": ["qwen2.5:72b"],
+    "fp_votes_to_downgrade": 1,
+    "action": "downgrade_and_flag",
+    "_note": "솔로 모드에서는 앙상블 다수결 미사용(enabled=false). 판정은 역할 fp_judge 단일 모델이 담당."
+  }
+}

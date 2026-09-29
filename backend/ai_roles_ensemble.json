@@ -1,0 +1,19 @@
+{
+  "_comment": "역할→모델 라우터 + 오탐 앙상블 판정 설정. 코드 수정 없이 이 파일만 고쳐 계속 업데이트하세요. 모델이 없으면 fallback_model 로 자동 대체됩니다.",
+  "enabled": true,
+  "fallback_model": "qwen2.5:7b",
+  "roles": {
+    "analysis":        { "model": "qwen2.5:32b",       "note": "취약점 분석·서사(가장 무거운 추론)" },
+    "poc":             { "model": "qwen2.5-coder:14b", "note": "PoC/exploit 코드(코드 특화)" },
+    "crawl":           { "model": "llama3.1:8b",        "note": "크롤·발견 판단(빠름·다호출)" },
+    "probe_priority":  { "model": "llama3.1:8b",        "note": "프로브 우선순위 판단" },
+    "fp_judge":        { "model": "qwen2.5:32b",        "note": "오탐 판정 대표 모델(앙상블 미사용 시)" }
+  },
+  "fp_judge_ensemble": {
+    "enabled": true,
+    "panel": ["qwen2.5:32b", "llama3.1:8b", "gemma2:9b"],
+    "fp_votes_to_downgrade": 2,
+    "action": "downgrade_and_flag",
+    "_note": "advisory 전용 — CONFIRMED 를 삭제하지 않고 confidence 하향+검토표시만. 미탐(진짜 취약점 숨김) 방지."
+  }
+}

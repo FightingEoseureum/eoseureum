@@ -1,0 +1,44 @@
+[
+  {
+    "tech": "Apache Tomcat",
+    "keywords": ["apache-coyote", "tomcat", "jsessionid", "catalina"],
+    "related_ids": ["ADMIN_INTERFACE", "SERVER_HEADER", "TRACE_METHOD"],
+    "common_exposures": ["/manager/html", "/host-manager/html", "/examples/", "/docs/"],
+    "analyst_notes": "Tomcat Manager/Host-Manager 는 기본 계정·약한 자격증명으로 자주 노출된다. 버전 노출 시 알려진 CVE(예: Ghostcat AJP, 디시리얼라이즈) 표적화에 유의. TRACE 기본 활성 여부도 점검한다."
+  },
+  {
+    "tech": "Spring Boot",
+    "keywords": ["spring", "spring boot", "whitelabel", "x-application-context", "actuator"],
+    "related_ids": ["ACTUATOR_EXPOSURE", "ENV_EXPOSURE", "ERROR_PAGE_DISCLOSURE", "SWAGGER_EXPOSURE"],
+    "common_exposures": ["/actuator", "/actuator/env", "/actuator/heapdump", "/actuator/health", "/v3/api-docs", "/swagger-ui.html"],
+    "analyst_notes": "Spring Boot 는 Actuator 노출(env/heapdump)로 자격증명이 새기 쉽다. Whitelabel 에러 페이지의 스택 트레이스 노출, springdoc/Swagger 문서 노출을 함께 점검한다."
+  },
+  {
+    "tech": "WordPress",
+    "keywords": ["wordpress", "wp-content", "wp-includes", "wp-json", "x-pingback"],
+    "related_ids": ["ADMIN_INTERFACE", "BACKUP_FILE", "REFLECTED_XSS"],
+    "common_exposures": ["/wp-login.php", "/wp-admin/", "/wp-json/", "/xmlrpc.php", "/wp-config.php.bak"],
+    "analyst_notes": "WordPress 는 wp-login 무차별 대입, 취약 플러그인/테마, xmlrpc 증폭, wp-config 백업 노출이 흔하다. 코어·플러그인 버전 노출을 통한 취약점 매핑에 유의한다."
+  },
+  {
+    "tech": "PHP",
+    "keywords": ["php", "x-powered-by: php", "phpsessid", ".php"],
+    "related_ids": ["SERVER_HEADER", "LFI", "ERROR_PAGE_DISCLOSURE", "BACKUP_FILE"],
+    "common_exposures": ["/phpinfo.php", "/info.php", "/.phps", "/config.php.bak"],
+    "analyst_notes": "X-Powered-By 로 PHP 버전 노출, expose_php=Off 미적용을 점검한다. include/require 사용처의 LFI, phpinfo 노출, .bak/.phps 소스 노출에 유의한다."
+  },
+  {
+    "tech": "Nginx",
+    "keywords": ["nginx", "server: nginx"],
+    "related_ids": ["SERVER_HEADER", "ERROR_PAGE_DISCLOSURE"],
+    "common_exposures": ["/nginx_status", "/.git", "/.env"],
+    "analyst_notes": "server_tokens off 미적용 시 버전 노출. 오프-바이-슬래시·alias 오설정으로 인한 경로 노출, 정적 서빙 경로의 .git/.env 노출을 점검한다."
+  },
+  {
+    "tech": "Apache HTTP Server",
+    "keywords": ["apache", "server: apache", "apache httpd"],
+    "related_ids": ["SERVER_HEADER", "TRACE_METHOD", "LFI", "ERROR_PAGE_DISCLOSURE"],
+    "common_exposures": ["/server-status", "/server-info", "/.htaccess", "/icons/"],
+    "analyst_notes": "ServerTokens Prod 미적용 시 버전 노출. 특정 버전(2.4.49/2.4.50)의 경로 순회·RCE CVE 에 유의하고 TRACE 기본 활성, server-status 노출을 점검한다."
+  }
+]

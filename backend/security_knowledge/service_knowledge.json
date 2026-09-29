@@ -1,0 +1,394 @@
+[
+  {
+    "id": "SSH_WEAK_ALGORITHM",
+    "title": "SSH 약한 암호화 알고리즘 사용 (Weak SSH Algorithms)",
+    "keywords": ["ssh", "weak algorithm", "약한 알고리즘", "cbc", "sha1", "diffie-hellman-group1", "hmac-sha1", "arcfour", "3des-cbc"],
+    "owasp": "A02:2021-Cryptographic Failures",
+    "cwe": "CWE-326",
+    "default_severity": "Medium",
+    "confirmed_evidence": [
+      "SSH 서버가 CBC 모드 암호(aes128-cbc, 3des-cbc 등) 협상 허용",
+      "HMAC-SHA1 또는 약한 MAC 알고리즘 협상 허용",
+      "취약한 키 교환(diffie-hellman-group1-sha1 등) 지원"
+    ],
+    "false_positive_conditions": [
+      "최신 알고리즘만 협상되고 약한 알고리즘이 비활성화됨",
+      "스캐너가 지원 목록을 나열했으나 실제 협상에서 제외됨"
+    ],
+    "business_impact": "약한 암호·MAC·키 교환은 중간자 공격·세션 복호화 위험을 높여 자격증명·세션 데이터 노출로 이어질 수 있다.",
+    "remediation": [
+      "sshd_config 에서 Ciphers/MACs/KexAlgorithms 를 강력한 알고리즘만으로 제한(예: chacha20-poly1305, aes256-gcm, hmac-sha2-512-etm, curve25519-sha256)",
+      "CBC 모드·SHA1 기반·DH group1 알고리즘 비활성화",
+      "OpenSSH 최신 버전으로 업데이트 후 설정 검증"
+    ],
+    "additional_verification": [
+      "ssh-audit 등으로 협상 가능한 실제 알고리즘 집합 확인",
+      "변경 후 클라이언트 호환성 회귀 점검"
+    ],
+    "analyst_notes": "지원 목록 나열만으로는 정보성. 약한 알고리즘이 실제 협상 가능하면 설정 취약점."
+  },
+  {
+    "id": "FTP_ANONYMOUS_LOGIN",
+    "title": "FTP 익명 로그인 허용 (Anonymous FTP)",
+    "keywords": ["ftp", "anonymous", "익명 로그인", "anonymous ftp", "ftp 21", "230 login successful"],
+    "owasp": "A07:2021-Identification and Authentication Failures",
+    "cwe": "CWE-287",
+    "default_severity": "Medium",
+    "confirmed_evidence": [
+      "anonymous 계정으로 인증 없이 로그인 성공(230 응답)",
+      "익명 사용자가 디렉터리 목록·파일 다운로드 가능",
+      "익명 사용자에게 쓰기 권한이 부여됨"
+    ],
+    "false_positive_conditions": [
+      "anonymous 로그인이 거부됨(530 응답)",
+      "익명 접근이 빈 격리 디렉터리로 한정되고 민감 데이터 없음"
+    ],
+    "business_impact": "익명 접근은 비인가 파일 열람·업로드를 허용해 정보 유출, 악성 파일 호스팅, 추가 공격 발판이 될 수 있다.",
+    "remediation": [
+      "운영상 불필요하면 익명 FTP 비활성화(anonymous_enable=NO)",
+      "필요 시 읽기 전용·격리 디렉터리로 제한하고 민감 데이터 분리",
+      "가능하면 평문 FTP 대신 SFTP/FTPS 로 전환"
+    ],
+    "additional_verification": [
+      "익명 계정의 읽기/쓰기 권한 범위 확인",
+      "노출 디렉터리 내 민감 파일 존재 여부 점검"
+    ],
+    "analyst_notes": "익명 로그인 성공 + 민감 파일/쓰기 권한이면 승격. 빈 격리 디렉터리만이면 위험 낮음."
+  },
+  {
+    "id": "SMTP_OPEN_RELAY",
+    "title": "SMTP 오픈 릴레이 (Open Mail Relay)",
+    "keywords": ["smtp", "open relay", "오픈 릴레이", "mail relay", "25", "relay access"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-269",
+    "default_severity": "Medium",
+    "confirmed_evidence": [
+      "외부 발신자→외부 수신자 메일 중계가 인증 없이 수락됨",
+      "RCPT TO 가 외부 도메인에 대해 250 으로 수락됨",
+      "릴레이 테스트 메일이 외부로 전달됨"
+    ],
+    "false_positive_conditions": [
+      "릴레이 시도가 550/relay denied 로 거부됨",
+      "인증·허용 네트워크에 한해 릴레이가 제한됨"
+    ],
+    "business_impact": "오픈 릴레이는 스팸·피싱 발송에 악용되어 도메인 평판 손상·블랙리스트 등재, 서비스 신뢰도 저하를 유발한다.",
+    "remediation": [
+      "메일 서버 릴레이 정책을 인증 사용자·허용 네트워크로 한정",
+      "SMTP AUTH 강제, 외부→외부 무인증 중계 차단",
+      "SPF/DKIM/DMARC 적용으로 발신 도메인 보호"
+    ],
+    "additional_verification": [
+      "허용 네트워크 외부에서 릴레이 거부되는지 확인",
+      "인증 없이 외부 수신자 수락 여부 점검"
+    ],
+    "analyst_notes": "외부→외부 중계가 실제 수락되면 확정. 거부 응답이면 오탐."
+  },
+  {
+    "id": "DNS_ZONE_TRANSFER",
+    "title": "DNS 영역 전송 허용 (Zone Transfer / AXFR)",
+    "keywords": ["dns", "axfr", "zone transfer", "영역 전송", "ixfr", "53"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-200",
+    "default_severity": "Medium",
+    "confirmed_evidence": [
+      "임의 클라이언트에 대해 AXFR 영역 전송이 성공",
+      "전체 존 레코드(내부 호스트명·IP) 덤프 가능",
+      "보조 서버 제한 없이 IXFR/AXFR 응답"
+    ],
+    "false_positive_conditions": [
+      "AXFR 요청이 거부(REFUSED)되거나 허용 IP로 제한됨",
+      "전송이 인증된 보조 네임서버에만 허용됨"
+    ],
+    "business_impact": "전체 존 노출은 내부 호스트·서비스 구조를 드러내 공격 표면 식별과 추가 정찰을 용이하게 한다.",
+    "remediation": [
+      "allow-transfer 를 인증된 보조 네임서버 IP로만 한정",
+      "임의 호스트에 대한 AXFR/IXFR 거부",
+      "TSIG 키 기반 전송 인증 적용"
+    ],
+    "additional_verification": [
+      "허용 IP 외부에서 AXFR 거부되는지 확인",
+      "노출 레코드에 내부 전용 호스트 포함 여부 점검"
+    ],
+    "analyst_notes": "임의 클라이언트 AXFR 성공이면 확정. REFUSED/IP 제한이면 오탐."
+  },
+  {
+    "id": "RDP_EXPOSURE_NLA",
+    "title": "RDP 노출 및 NLA 미적용 (Remote Desktop)",
+    "keywords": ["rdp", "3389", "nla", "원격 데스크톱", "network level authentication", "remote desktop"],
+    "owasp": "A07:2021-Identification and Authentication Failures",
+    "cwe": "CWE-287",
+    "default_severity": "Medium",
+    "confirmed_evidence": [
+      "RDP(3389) 가 인터넷에 직접 노출됨",
+      "NLA(네트워크 수준 인증)가 비활성화되어 인증 전 세션 협상 가능",
+      "TLS 미적용/취약한 인증서로 RDP 협상"
+    ],
+    "false_positive_conditions": [
+      "RDP 가 VPN/IP 화이트리스트 뒤에 있어 외부 접근 불가",
+      "NLA 강제 + 강력한 TLS 가 적용됨"
+    ],
+    "business_impact": "노출된 RDP 는 무차별 대입·자격증명 도용·취약점과 결합 시 원격 시스템 장악의 핵심 진입점이 된다.",
+    "remediation": [
+      "RDP 를 인터넷에서 분리(VPN/IP 제한/RD 게이트웨이)",
+      "NLA 강제 및 강력한 TLS·인증서 적용",
+      "다중 인증·계정 잠금 정책·접근 로깅 적용"
+    ],
+    "additional_verification": [
+      "NLA 강제 여부 및 인증 전 세션 협상 가능성 확인",
+      "외부 접근 경로 제한 여부 점검"
+    ],
+    "analyst_notes": "NLA 미적용 + 인터넷 직접 노출이면 위험 상승. VPN/IP 제한 뒤면 위험 낮음."
+  },
+  {
+    "id": "SMBV1_ENABLED",
+    "title": "SMBv1 프로토콜 활성화 (Obsolete SMBv1)",
+    "keywords": ["smb", "smbv1", "445", "smb1", "cifs", "obsolete protocol"],
+    "owasp": "A06:2021-Vulnerable and Outdated Components",
+    "cwe": "CWE-477",
+    "default_severity": "Medium",
+    "confirmed_evidence": [
+      "서버가 SMBv1 협상을 허용(SMB1 dialect 응답)",
+      "SMB(445) 가 인터넷에 노출되며 SMBv1 활성",
+      "메시지 서명 미적용 + SMBv1 동시 활성"
+    ],
+    "false_positive_conditions": [
+      "SMBv1 이 비활성화되고 SMBv2/3 만 협상됨",
+      "SMB 가 내부망 한정으로 외부 노출 없음"
+    ],
+    "business_impact": "지원 종료된 SMBv1 은 알려진 결함이 다수이며 워밍·랜섬웨어 확산 경로로 악용되어 대규모 침해를 유발할 수 있다.",
+    "remediation": [
+      "SMBv1 비활성화(클라이언트/서버 모두), SMBv2/3 만 사용",
+      "SMB 메시지 서명 강제, 445 외부 노출 차단",
+      "운영체제·SMB 스택 최신 패치 적용"
+    ],
+    "additional_verification": [
+      "협상 가능한 SMB dialect 집합 확인",
+      "445 외부 노출 여부 및 서명 적용 점검"
+    ],
+    "analyst_notes": "SMBv1 협상 허용이 핵심. 외부 노출 시 위험 상승, 내부 한정 비활성이면 오탐."
+  },
+  {
+    "id": "REDIS_UNAUTH",
+    "title": "Redis 인증 없는 접근 (Unauthenticated Redis)",
+    "keywords": ["redis", "6379", "unauthenticated", "인증 없는", "no auth", "redis unauth"],
+    "owasp": "A07:2021-Identification and Authentication Failures",
+    "cwe": "CWE-306",
+    "default_severity": "High",
+    "confirmed_evidence": [
+      "인증 없이 Redis(6379) 에 접속해 INFO/CONFIG 등 명령 실행 가능",
+      "requirepass 미설정으로 무인증 읽기/쓰기 가능",
+      "외부에서 무인증 접근으로 데이터 조회·변경 가능"
+    ],
+    "false_positive_conditions": [
+      "requirepass/ACL 로 인증이 강제됨(NOAUTH 응답)",
+      "Redis 가 localhost 바인딩·방화벽으로 외부 접근 불가"
+    ],
+    "business_impact": "무인증 Redis 는 데이터 유출·변조는 물론 설정 악용을 통한 서버 장악으로 확대될 수 있는 치명적 노출이다.",
+    "remediation": [
+      "requirepass/ACL 로 인증 강제, 강력한 비밀번호 설정",
+      "bind 를 신뢰 인터페이스로 제한하고 protected-mode 활성화",
+      "6379 외부 노출 차단(방화벽/보안 그룹), 위험 명령 비활성화"
+    ],
+    "additional_verification": [
+      "무인증 상태에서 명령 실행 가능 여부 확인",
+      "외부 네트워크에서 접근 가능 여부 점검"
+    ],
+    "analyst_notes": "무인증 접근 + 외부 노출이면 High~Critical. 인증 강제·내부 한정이면 오탐."
+  },
+  {
+    "id": "MONGODB_UNAUTH",
+    "title": "MongoDB 인증 없는 접근 (Unauthenticated MongoDB)",
+    "keywords": ["mongodb", "27017", "unauthenticated", "mongo", "no auth", "인증 없는"],
+    "owasp": "A07:2021-Identification and Authentication Failures",
+    "cwe": "CWE-306",
+    "default_severity": "High",
+    "confirmed_evidence": [
+      "인증 없이 MongoDB(27017) 에 접속해 DB 목록·컬렉션 조회 가능",
+      "authorization 미활성으로 무인증 읽기/쓰기 가능",
+      "외부에서 무인증으로 데이터 열람 가능"
+    ],
+    "false_positive_conditions": [
+      "authorization 활성으로 인증이 강제됨(Unauthorized 응답)",
+      "bindIp 가 localhost·내부망으로 제한되어 외부 접근 불가"
+    ],
+    "business_impact": "무인증 MongoDB 는 대량 데이터 유출·변조·삭제(랜섬) 위험이 높아 즉각적인 데이터 침해로 이어진다.",
+    "remediation": [
+      "security.authorization 활성화 및 사용자/역할 기반 인증 적용",
+      "bindIp 를 신뢰 인터페이스로 제한, 27017 외부 노출 차단",
+      "전송 암호화(TLS) 적용 및 접근 감사 로깅"
+    ],
+    "additional_verification": [
+      "무인증 상태에서 DB/컬렉션 접근 가능 여부 확인",
+      "외부 네트워크 접근 가능 여부 점검"
+    ],
+    "analyst_notes": "무인증 데이터 접근이 확인되면 High~Critical. 인증 강제·내부 한정이면 오탐."
+  },
+  {
+    "id": "ELASTICSEARCH_UNAUTH",
+    "title": "Elasticsearch 인증 없는 접근 (Unauthenticated Elasticsearch)",
+    "keywords": ["elasticsearch", "9200", "unauthenticated", "elastic", "_cat/indices", "인증 없는"],
+    "owasp": "A07:2021-Identification and Authentication Failures",
+    "cwe": "CWE-306",
+    "default_severity": "High",
+    "confirmed_evidence": [
+      "인증 없이 9200 에 접속해 _cat/indices 등 API 호출 가능",
+      "xpack.security 비활성으로 무인증 인덱스 조회 가능",
+      "외부에서 무인증으로 문서 데이터 열람 가능"
+    ],
+    "false_positive_conditions": [
+      "xpack.security 활성으로 인증이 강제됨(401 응답)",
+      "9200 이 내부망 한정·방화벽으로 외부 접근 불가"
+    ],
+    "business_impact": "무인증 Elasticsearch 는 인덱싱된 민감 데이터 대량 유출과 삭제·변조 위험을 초래한다.",
+    "remediation": [
+      "xpack.security 활성화 및 인증/역할 기반 접근 제어 적용",
+      "9200 외부 노출 차단, 신뢰 네트워크로 바인딩 제한",
+      "TLS 전송 암호화 및 감사 로깅 적용"
+    ],
+    "additional_verification": [
+      "무인증 상태에서 인덱스 조회 가능 여부 확인",
+      "외부 접근 가능 여부 및 노출 데이터 민감도 점검"
+    ],
+    "analyst_notes": "무인증 인덱스 접근이 확인되면 High~Critical. 인증 강제·내부 한정이면 오탐."
+  },
+  {
+    "id": "DOCKER_API_EXPOSURE",
+    "title": "Docker API 노출 (Exposed Docker Remote API)",
+    "keywords": ["docker", "2375", "docker api", "docker remote api", "/containers/json", "docker daemon"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-306",
+    "default_severity": "High",
+    "confirmed_evidence": [
+      "인증 없이 Docker API(2375) 에 접속해 /containers/json 등 호출 가능",
+      "TLS 미적용 데몬 소켓이 외부에 노출됨",
+      "무인증으로 컨테이너 목록·상태 조회 가능"
+    ],
+    "false_positive_conditions": [
+      "API 가 mTLS(2376)·인증으로 보호됨",
+      "데몬이 로컬 유닉스 소켓만 사용하고 외부 노출 없음"
+    ],
+    "business_impact": "무인증 Docker API 는 컨테이너 제어·호스트 마운트를 통한 호스트 장악으로 직결되는 치명적 노출이다.",
+    "remediation": [
+      "Docker 원격 API 외부 노출 중단, 유닉스 소켓 사용 권장",
+      "원격 접근 필요 시 mTLS(2376) 와 클라이언트 인증 강제",
+      "2375 방화벽 차단 및 접근 감사"
+    ],
+    "additional_verification": [
+      "무인증 API 호출 가능 여부 확인",
+      "외부 노출 경로 및 TLS 적용 여부 점검"
+    ],
+    "analyst_notes": "무인증 2375 노출이면 High~Critical(호스트 장악 가능). mTLS 보호면 오탐."
+  },
+  {
+    "id": "KUBERNETES_API_EXPOSURE",
+    "title": "Kubernetes API 서버 노출 (Exposed Kubernetes API)",
+    "keywords": ["kubernetes", "6443", "k8s api", "kube-apiserver", "anonymous-auth", "k8s"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-306",
+    "default_severity": "High",
+    "confirmed_evidence": [
+      "익명 인증 허용으로 무인증 API 요청이 처리됨",
+      "kube-apiserver(6443) 가 인터넷에 직접 노출됨",
+      "무인증으로 클러스터 정보·리소스 조회 가능"
+    ],
+    "false_positive_conditions": [
+      "anonymous-auth=false 및 RBAC 로 접근이 거부됨(401/403)",
+      "API 서버가 사설망·승인된 IP로만 접근 가능"
+    ],
+    "business_impact": "무인증/노출된 K8s API 는 클러스터 전체 리소스 제어·워크로드 탈취로 이어지는 치명적 노출이다.",
+    "remediation": [
+      "anonymous-auth 비활성화, RBAC 최소 권한 적용",
+      "API 서버를 사설망/승인 IP로 제한, 6443 외부 노출 차단",
+      "감사 로깅·인증(mTLS/OIDC) 강제"
+    ],
+    "additional_verification": [
+      "익명 요청 거부 여부(401/403) 확인",
+      "외부 접근 경로 제한 여부 점검"
+    ],
+    "analyst_notes": "익명 인증 허용 또는 무인증 노출이면 High~Critical. RBAC·익명 비활성이면 오탐."
+  },
+  {
+    "id": "JENKINS_EXPOSURE",
+    "title": "Jenkins 노출 (Exposed Jenkins)",
+    "keywords": ["jenkins", "8080", "jenkins login", "script console", "/script"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-284",
+    "default_severity": "Medium",
+    "confirmed_evidence": [
+      "Jenkins 가 인증 없이 작업·빌드 정보에 접근 가능",
+      "/script(스크립트 콘솔) 등 위험 기능이 무인증 노출",
+      "익명 사용자에게 읽기/실행 권한 부여됨"
+    ],
+    "false_positive_conditions": [
+      "로그인 폼만 노출되고 인증·인가가 강제됨(공격 표면)",
+      "내부망·IP 제한으로 외부 접근 불가"
+    ],
+    "business_impact": "노출된 Jenkins 는 파이프라인·자격증명 유출과 스크립트 콘솔을 통한 원격 코드 실행으로 확대될 수 있다.",
+    "remediation": [
+      "보안(인증/인가) 활성화 및 익명 권한 제거",
+      "스크립트 콘솔 등 위험 기능 접근 제한, 외부 노출 차단",
+      "Jenkins·플러그인 최신 업데이트 및 자격증명 보호"
+    ],
+    "additional_verification": [
+      "무인증으로 접근 가능한 기능 범위 확인",
+      "스크립트 콘솔·자격증명 노출 여부 점검"
+    ],
+    "analyst_notes": "로그인 폼만이면 공격 표면. 무인증 기능 접근·스크립트 콘솔 노출이면 승격."
+  },
+  {
+    "id": "GRAFANA_EXPOSURE",
+    "title": "Grafana 노출 (Exposed Grafana)",
+    "keywords": ["grafana", "3000", "grafana login", "anonymous access", "grafana dashboard"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-284",
+    "default_severity": "Low",
+    "confirmed_evidence": [
+      "익명 접근 허용으로 대시보드가 무인증 노출됨",
+      "기본 계정(admin/admin)이 변경되지 않음",
+      "무인증으로 데이터 소스·메트릭 열람 가능"
+    ],
+    "false_positive_conditions": [
+      "로그인 폼만 노출되고 인증이 강제됨(공격 표면)",
+      "내부망·IP 제한으로 외부 접근 불가"
+    ],
+    "business_impact": "노출된 Grafana 는 인프라 메트릭·데이터 소스 정보 유출과 기본계정·취약점 결합 시 권한 상승으로 이어질 수 있다.",
+    "remediation": [
+      "익명 접근 비활성화, 기본 계정 변경 및 강력한 인증 적용",
+      "외부 노출 차단(리버스 프록시 인증/IP 제한)",
+      "Grafana 최신 업데이트 및 데이터 소스 자격증명 보호"
+    ],
+    "additional_verification": [
+      "익명 접근·기본계정 사용 여부 확인",
+      "노출 대시보드의 민감 정보 포함 여부 점검"
+    ],
+    "analyst_notes": "로그인 폼만이면 공격 표면. 익명 접근·기본계정 성공이면 승격."
+  },
+  {
+    "id": "KIBANA_EXPOSURE",
+    "title": "Kibana 노출 (Exposed Kibana)",
+    "keywords": ["kibana", "5601", "kibana dashboard", "kibana login"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-284",
+    "default_severity": "Low",
+    "confirmed_evidence": [
+      "인증 없이 Kibana(5601) 대시보드·데이터 열람 가능",
+      "보안 미적용으로 무인증 인덱스 탐색 가능",
+      "외부에서 무인증으로 시각화·데이터 접근 가능"
+    ],
+    "false_positive_conditions": [
+      "로그인 폼만 노출되고 인증이 강제됨(공격 표면)",
+      "내부망·IP 제한으로 외부 접근 불가"
+    ],
+    "business_impact": "노출된 Kibana 는 백엔드 Elasticsearch 데이터 열람·탐색을 허용해 민감 데이터 유출로 이어질 수 있다.",
+    "remediation": [
+      "Elastic Stack 보안(인증/인가) 활성화, 익명 접근 제거",
+      "5601 외부 노출 차단(리버스 프록시 인증/IP 제한)",
+      "백엔드 Elasticsearch 인증 연동 및 TLS 적용"
+    ],
+    "additional_verification": [
+      "무인증 데이터 접근 가능 여부 확인",
+      "외부 노출 경로 및 백엔드 인증 연동 점검"
+    ],
+    "analyst_notes": "로그인 폼만이면 공격 표면. 무인증 데이터 접근 가능하면 승격."
+  }
+]

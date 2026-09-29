@@ -1,0 +1,19 @@
+{
+  "_comment": "역할→모델 라우터. 이 환경(Mac Ollama localhost)에 설치된 모델만 지정 가능(@HOST 미지원). 설치: qwen2.5 32b/14b/7b. 원본 아카이브의 llama3.1/gemma2/coder:14b는 미설치라 정합함.",
+  "enabled": true,
+  "fallback_model": "qwen2.5:14b",
+  "roles": {
+    "analysis": {"model": "qwen2.5:32b", "note": "취약점 분석·서사(최대 모델)"},
+    "poc": {"model": "qwen2.5:14b", "note": "PoC 코드(coder 미설치→범용 14b)"},
+    "crawl": {"model": "qwen2.5:7b", "note": "크롤 판단(경량)"},
+    "probe_priority": {"model": "qwen2.5:7b", "note": "프로브 우선순위(경량)"},
+    "fp_judge": {"model": "qwen2.5:32b", "note": "오탐 판정(최대 모델)"}
+  },
+  "fp_judge_ensemble": {
+    "enabled": true,
+    "panel": ["qwen2.5:32b", "qwen2.5:14b", "qwen2.5:7b"],
+    "fp_votes_to_downgrade": 2,
+    "action": "downgrade_and_flag",
+    "_note": "advisory 전용(CONFIRMED 삭제 안 함). Mac 설치 3종 크기 다양성."
+  }
+}

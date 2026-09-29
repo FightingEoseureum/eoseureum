@@ -1,0 +1,51 @@
+[
+  {
+    "id": "ADMIN_SURFACE_CHAIN",
+    "when": ["admin exposure", "server version"],
+    "related_ids": ["ADMIN_INTERFACE", "SERVER_HEADER"],
+    "summary": "관리 인터페이스 공격 표면 + 서버 버전 노출",
+    "analyst_notes": "관리자/매니저 인터페이스가 노출된 상태에서 정확한 서버·프레임워크 버전이 함께 노출되면, 공격자는 해당 버전의 알려진 취약점·기본 자격증명을 표적화해 관리 기능 장악을 시도한다. 무차별 대입·기본계정 점검을 우선한다."
+  },
+  {
+    "id": "CLICKJACKING_AUTH_CHAIN",
+    "when": ["clickjacking", "auth page"],
+    "related_ids": ["CLICKJACKING", "ADMIN_INTERFACE"],
+    "summary": "클릭재킹 + 인증/관리 페이지 프레이밍",
+    "analyst_notes": "프레이밍 방지 헤더가 없는 상태에서 로그인/관리 페이지가 iframe 으로 로드되면, 클릭재킹으로 사용자의 인증·관리 동작(설정 변경, 권한 부여)을 유도할 수 있다. 민감 페이지의 XFO/CSP frame-ancestors 적용을 우선한다."
+  },
+  {
+    "id": "SWAGGER_UNAUTH_CHAIN",
+    "when": ["swagger unauth", "openapi"],
+    "related_ids": ["SWAGGER_EXPOSURE", "GRAPHQL_EXPOSURE"],
+    "summary": "API 문서 노출 + 무인증 엔드포인트",
+    "analyst_notes": "Swagger/OpenAPI 또는 GraphQL 스키마로 전체 API 구조가 노출되면, 인증/인가가 누락된 엔드포인트(예: 사용자 목록, 관리 API)를 빠르게 식별해 무인증 호출로 데이터 유출·권한 우회를 시도한다. 문서상 민감 엔드포인트의 인가를 우선 점검한다."
+  },
+  {
+    "id": "ACTUATOR_ENV_CHAIN",
+    "when": ["actuator", "env", "heapdump"],
+    "related_ids": ["ACTUATOR_EXPOSURE", "ENV_EXPOSURE"],
+    "summary": "Actuator/env/heapdump 자격증명 노출",
+    "analyst_notes": "/actuator/env 또는 /actuator/heapdump 에서 DB 자격증명·토큰이 노출되면, 이를 이용한 DB 직접 접속·외부 서비스 침투·jolokia/gateway 를 통한 원격 코드 실행으로 확장된다. 노출 시크릿 즉시 폐기와 엔드포인트 차단을 우선한다."
+  },
+  {
+    "id": "GIT_CONFIG_CHAIN",
+    "when": [".git config", "source disclosure"],
+    "related_ids": ["GIT_EXPOSURE", "ENV_EXPOSURE", "BACKUP_FILE"],
+    "summary": ".git/소스/설정 파일 노출 연계",
+    "analyst_notes": ".git 으로 전체 소스를 복원하면 하드코딩된 시크릿·내부 경로·추가 취약 엔드포인트가 드러나고, 함께 노출된 .env/백업 파일과 결합해 자격증명 탈취·전면 침해로 이어진다. 노출 시크릿 폐기와 .git/.env/백업 접근 차단을 우선한다."
+  },
+  {
+    "id": "TRACE_XST_CHAIN",
+    "when": ["trace", "xss"],
+    "related_ids": ["TRACE_METHOD", "REFLECTED_XSS", "STORED_XSS"],
+    "summary": "TRACE(XST) + XSS 쿠키 탈취",
+    "analyst_notes": "TRACE 가 활성화된 상태에서 XSS 취약점이 존재하면, XST 로 HttpOnly 쿠키까지 탈취해 세션 하이재킹 영향이 커진다. TRACE 비활성화와 XSS 출력 인코딩을 함께 적용한다."
+  },
+  {
+    "id": "INJECTION_ERROR_CHAIN",
+    "when": ["sql injection", "error page"],
+    "related_ids": ["SQL_INJECTION", "ERROR_PAGE_DISCLOSURE"],
+    "summary": "에러 메시지 기반 인젝션 정찰",
+    "analyst_notes": "상세 에러 페이지가 DB 오류·쿼리 구조를 노출하면 오류 기반 SQL 인젝션의 데이터 추출이 용이해진다. 오류 메시지 일반화와 파라미터 바인딩을 함께 적용한다."
+  }
+]

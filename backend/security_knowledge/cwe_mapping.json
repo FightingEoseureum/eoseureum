@@ -1,0 +1,198 @@
+[
+  {
+    "id": "ADMIN_INTERFACE",
+    "title": "관리자 인터페이스 노출 (Admin Interface Exposure)",
+    "keywords": ["관리자", "admin", "로그인 폼", "manager", "admin panel", "wp-admin", "wp-login", "phpmyadmin", "관리 콘솔"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-284",
+    "default_severity": "Low",
+    "confirmed_evidence": [
+      "인증 없이 관리 기능 접근 가능",
+      "기본 계정/약한 자격증명으로 로그인 성공",
+      "관리자 페이지에서 민감 데이터·사용자 목록 노출"
+    ],
+    "false_positive_conditions": [
+      "HTTP 200 + 로그인 폼만 확인되고 우회 근거 없음(공격 표면에 해당)",
+      "관리 경로가 IP 화이트리스트/VPN 으로 제한됨"
+    ],
+    "business_impact": "노출된 관리 인터페이스는 무차별 대입·기본계정·취약점과 결합 시 시스템 전체 장악으로 이어질 수 있다.",
+    "remediation": [
+      "관리 인터페이스를 인터넷에서 분리(VPN/IP 제한)",
+      "강력한 인증·다중 인증 적용, 기본 계정 제거",
+      "관리 경로 비공개화 및 접근 로깅·알림"
+    ],
+    "additional_verification": [
+      "기본 계정/약한 자격증명 시도(권한 범위 내)",
+      "인증 우회·기능 직접 호출 가능 여부 확인"
+    ],
+    "analyst_notes": "로그인 폼만 보이면 공격 표면이며 취약점 아님. 무인증 기능 접근·기본계정 성공 시 취약점으로 승격."
+  },
+  {
+    "id": "SWAGGER_EXPOSURE",
+    "title": "Swagger/OpenAPI 문서 노출",
+    "keywords": ["swagger", "openapi", "api-docs", "swagger-ui", "api 문서", "v2/api-docs", "v3/api-docs"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-200",
+    "default_severity": "Low",
+    "confirmed_evidence": [
+      "인증 없이 Swagger UI/OpenAPI 스펙 전체 노출",
+      "노출 스펙으로 무인증 호출 가능한 민감 엔드포인트 확인",
+      "내부/관리 API 경로가 문서에 포함"
+    ],
+    "false_positive_conditions": [
+      "Swagger UI 가 인증 뒤에 있거나 운영에서 비활성",
+      "문서만 노출되고 민감 엔드포인트가 모두 인증 보호됨(공격 표면)"
+    ],
+    "business_impact": "전체 API 구조·파라미터가 노출되어 공격자가 인증/인가 결함 엔드포인트를 손쉽게 탐색·악용한다.",
+    "remediation": [
+      "운영 환경에서 Swagger/OpenAPI 문서 비활성화 또는 인증 보호",
+      "내부 전용 문서를 외부에 노출하지 않도록 경로 차단",
+      "문서 내 민감 엔드포인트의 인가 점검"
+    ],
+    "additional_verification": [
+      "문서에 명시된 엔드포인트의 무인증 호출 가능성 확인",
+      "관리/민감 기능 포함 여부 점검"
+    ],
+    "analyst_notes": "문서 노출 자체는 공격 표면. 노출 API 중 무인증 민감 호출이 가능하면 취약점."
+  },
+  {
+    "id": "GRAPHQL_EXPOSURE",
+    "title": "GraphQL 엔드포인트/인트로스펙션 노출",
+    "keywords": ["graphql", "graphiql", "introspection", "인트로스펙션", "graphql 엔드포인트"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-200",
+    "default_severity": "Low",
+    "confirmed_evidence": [
+      "인트로스펙션 쿼리로 전체 스키마 노출",
+      "GraphiQL/Playground 가 운영에 노출",
+      "무인증 쿼리로 민감 데이터 조회"
+    ],
+    "false_positive_conditions": [
+      "인트로스펙션 비활성 + 엔드포인트 인증 보호",
+      "공개 스키마만 노출되고 민감 필드는 인가 보호(공격 표면)"
+    ],
+    "business_impact": "스키마 노출로 숨은 타입·뮤테이션이 드러나 인가 우회·과다 조회·DoS(중첩 쿼리)로 이어질 수 있다.",
+    "remediation": [
+      "운영에서 인트로스펙션·GraphiQL 비활성화",
+      "필드/뮤테이션 단위 인가 적용",
+      "쿼리 깊이·복잡도 제한"
+    ],
+    "additional_verification": [
+      "인트로스펙션으로 민감 뮤테이션 존재 확인",
+      "무인증 민감 쿼리 실행 가능 여부 점검"
+    ],
+    "analyst_notes": "스키마 노출은 정찰 가치가 큼. 무인증 민감 쿼리/뮤테이션 성공 시 취약점 승격."
+  },
+  {
+    "id": "ACTUATOR_EXPOSURE",
+    "title": "Spring Boot Actuator 노출",
+    "keywords": ["actuator", "heapdump", "env", "spring boot", "/actuator", "actuator/env", "actuator/heapdump", "jolokia"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-200",
+    "default_severity": "Medium",
+    "confirmed_evidence": [
+      "/actuator/env 로 환경변수·자격증명 노출",
+      "/actuator/heapdump 다운로드로 메모리 내 시크릿 노출",
+      "/actuator/jolokia, /actuator/gateway 등 위험 엔드포인트 노출"
+    ],
+    "false_positive_conditions": [
+      "actuator 가 인증 보호되거나 health 등 무해 엔드포인트만 노출(공격 표면)",
+      "management.endpoints 노출 범위가 제한됨"
+    ],
+    "business_impact": "환경변수·heapdump 에서 DB 자격증명·토큰이 노출되고, jolokia/gateway 로 원격 코드 실행까지 확장될 수 있다.",
+    "remediation": [
+      "management.endpoints.web.exposure.include 를 최소화(health 등)",
+      "Actuator 에 인증·인가 적용, 별도 포트 분리",
+      "heapdump/env/jolokia 등 민감 엔드포인트 비공개"
+    ],
+    "additional_verification": [
+      "env/heapdump 에서 실제 시크릿 값 노출 확인",
+      "jolokia/gateway 의 RCE 가능성 점검"
+    ],
+    "analyst_notes": "env/heapdump 에서 시크릿이 실제 노출되면 High~Critical. health 만이면 공격 표면."
+  },
+  {
+    "id": "BACKUP_FILE",
+    "title": "백업 파일 노출 (Backup File Exposure)",
+    "keywords": ["backup", ".bak", "백업 파일", ".old", ".zip", ".tar", "~", "dump.sql", ".swp"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-530",
+    "default_severity": "Medium",
+    "confirmed_evidence": [
+      ".bak/.old/.zip 등 백업 파일이 다운로드 가능",
+      "백업 내 소스 코드·설정·시크릿 노출",
+      "DB 덤프(dump.sql) 다운로드 가능"
+    ],
+    "false_positive_conditions": [
+      "백업 후보 경로가 403/404 로 접근 불가",
+      "다운로드된 파일이 빈 파일 또는 무관한 내용"
+    ],
+    "business_impact": "소스 코드·자격증명·DB 덤프 노출로 추가 취약점 발굴과 데이터 유출이 발생한다.",
+    "remediation": [
+      "웹 루트에서 백업/임시 파일 제거",
+      "백업 확장자에 대한 직접 접근 차단",
+      "배포 파이프라인에서 백업 파일 산출 방지"
+    ],
+    "additional_verification": [
+      "다운로드 파일 내 시크릿/소스 포함 여부 확인",
+      "연관 경로의 추가 백업 파일 탐색"
+    ],
+    "analyst_notes": "실제 다운로드되고 내용이 민감하면 High. 접근 차단되면 정보성."
+  },
+  {
+    "id": "ENV_EXPOSURE",
+    "title": ".env 환경변수 파일 노출",
+    "keywords": [".env", "환경변수 파일", "dotenv", "env 파일", "DB_PASSWORD", "APP_KEY"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-538",
+    "default_severity": "High",
+    "confirmed_evidence": [
+      "/.env 응답에 DB_PASSWORD/APP_KEY/시크릿 키=값 노출",
+      "API 키·토큰·자격증명 평문 노출",
+      "내용이 dotenv 형식(KEY=VALUE)으로 확인"
+    ],
+    "false_positive_conditions": [
+      "/.env 가 403/404 또는 빈 응답",
+      "반환 내용이 dotenv 형식이 아닌 HTML 페이지(라우팅 처리됨)"
+    ],
+    "business_impact": "DB·외부 서비스 자격증명, 암호화 키가 평문 노출되어 즉각적인 데이터 침해·계정 탈취로 이어진다.",
+    "remediation": [
+      "웹 루트 밖으로 .env 이동, 직접 접근 차단",
+      "노출된 모든 시크릿 즉시 폐기·재발급",
+      "시크릿을 환경/시크릿 매니저로 관리"
+    ],
+    "additional_verification": [
+      "응답 본문에 실제 KEY=VALUE 시크릿 포함 확인",
+      "노출 자격증명의 외부 서비스 유효성 점검(권한 범위 내)"
+    ],
+    "analyst_notes": "실제 시크릿 값이 노출되면 Critical 급. 라우팅으로 가로채진 HTML 반환은 오탐."
+  },
+  {
+    "id": "GIT_EXPOSURE",
+    "title": ".git 디렉터리/저장소 노출",
+    "keywords": [".git", "git 노출", ".git/config", ".git/HEAD", "git 저장소", "source disclosure"],
+    "owasp": "A05:2021-Security Misconfiguration",
+    "cwe": "CWE-527",
+    "default_severity": "High",
+    "confirmed_evidence": [
+      "/.git/config, /.git/HEAD 접근 가능",
+      "git 메타데이터로 전체 소스 복원 가능",
+      "config/로그에 원격 URL·자격증명 노출"
+    ],
+    "false_positive_conditions": [
+      "/.git/ 경로가 403/404 로 차단됨",
+      "반환 내용이 git 형식이 아닌 일반 페이지"
+    ],
+    "business_impact": "전체 소스 코드와 커밋 이력·하드코딩된 시크릿이 복원되어 추가 취약점·자격증명이 유출된다.",
+    "remediation": [
+      "웹 서버에서 .git 디렉터리 접근 차단",
+      "배포물에 .git 포함 금지(빌드/아티팩트 정리)",
+      "이력에 포함된 시크릿 폐기·재발급"
+    ],
+    "additional_verification": [
+      ".git/config 와 HEAD 의 실제 git 콘텐츠 확인",
+      "소스 복원 가능 여부 및 시크릿 포함 점검"
+    ],
+    "analyst_notes": ".git/config/HEAD 가 실제 git 포맷으로 반환되면 확정. 차단/오라우팅은 오탐."
+  }
+]

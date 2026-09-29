@@ -1,0 +1,39 @@
+# ── 비밀·환경 ──
+.env
+.env.*
+!.env.example
+.secret_key
+*.pem
+*.key
+
+# ── 데이터·런타임 산출물 ──
+*.db
+*.db-*
+*.sqlite*
+*.jsonl
+screenshots/
+reports_out/
+*.log
+
+# ── 의존성·가상환경 ──
+.venv/
+venv/
+venv_*/
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# ── 빌드 ──
+dist/
+build/
+frontend/dist/
+
+# ── OS/에디터 ──
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ── 외부 도구(사용자가 직접 설치) ──
+tools/ghauri/

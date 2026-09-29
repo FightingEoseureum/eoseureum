@@ -1,0 +1,94 @@
+{
+  "SERVER_HEADER": {
+    "false_positive_conditions": [
+      "버전 숫자 없는 일반 배너만 노출(예: Server: Apache, Server: nginx)",
+      "CDN/프록시가 부여한 무의미한 헤더값",
+      "노출 버전이 백포트/패치된 디스트로 버전이라 해당 CVE 미적용"
+    ]
+  },
+  "CLICKJACKING": {
+    "false_positive_conditions": [
+      "X-Frame-Options: DENY/SAMEORIGIN 가 응답에 존재",
+      "CSP frame-ancestors 'none'/'self' 설정됨",
+      "민감 동작이 없는 정적/공개 페이지"
+    ]
+  },
+  "TRACE_METHOD": {
+    "false_positive_conditions": [
+      "TRACE 요청에 405/403 반환(요청 echo 없음)",
+      "Allow 헤더에 안전 메서드만 존재",
+      "OPTIONS Allow 에는 보이나 실제 TRACE 가 차단됨"
+    ]
+  },
+  "ERROR_PAGE_DISCLOSURE": {
+    "false_positive_conditions": [
+      "일반화된 커스텀 오류 페이지만 반환(상세 정보 없음)",
+      "운영 환경에서 스택 트레이스가 차단됨",
+      "노출 정보가 무해한 정적 문구"
+    ]
+  },
+  "CORS_MISCONFIG": {
+    "false_positive_conditions": [
+      "ACAO 가 고정 신뢰 도메인 화이트리스트로 제한됨",
+      "민감 데이터 없는 공개 API 에 대해서만 * 허용",
+      "Allow-Credentials 가 false 이고 와일드카드만 존재"
+    ]
+  },
+  "ADMIN_INTERFACE": {
+    "false_positive_conditions": [
+      "HTTP 200 + 로그인 폼만 확인되고 우회/기본계정 근거 없음(공격 표면)",
+      "관리 경로가 IP 화이트리스트/VPN 으로 제한됨",
+      "401/403 으로 인증이 강제됨"
+    ]
+  },
+  "SWAGGER_EXPOSURE": {
+    "false_positive_conditions": [
+      "Swagger UI 가 인증 뒤에 있거나 운영에서 비활성",
+      "문서만 노출되고 민감 엔드포인트가 모두 인증 보호됨(공격 표면)"
+    ]
+  },
+  "GRAPHQL_EXPOSURE": {
+    "false_positive_conditions": [
+      "인트로스펙션 비활성 + 엔드포인트 인증 보호",
+      "공개 스키마만 노출되고 민감 필드는 인가 보호됨"
+    ]
+  },
+  "ACTUATOR_EXPOSURE": {
+    "false_positive_conditions": [
+      "actuator 가 인증 보호되거나 health 등 무해 엔드포인트만 노출(공격 표면)",
+      "노출 범위(exposure.include)가 제한됨"
+    ]
+  },
+  "ENV_EXPOSURE": {
+    "false_positive_conditions": [
+      "/.env 가 403/404 또는 빈 응답",
+      "반환 내용이 dotenv(KEY=VALUE) 형식이 아닌 HTML(라우팅 처리됨)"
+    ]
+  },
+  "GIT_EXPOSURE": {
+    "false_positive_conditions": [
+      "/.git/ 경로가 403/404 로 차단됨",
+      "반환 내용이 git 포맷이 아닌 일반 페이지(오라우팅)"
+    ]
+  },
+  "BACKUP_FILE": {
+    "false_positive_conditions": [
+      "백업 후보 경로가 403/404 로 접근 불가",
+      "다운로드 파일이 빈 파일 또는 무관한 내용"
+    ]
+  },
+  "SQL_INJECTION": {
+    "false_positive_conditions": [
+      "파라미터가 정수 캐스팅/바인딩으로 처리됨",
+      "응답 차이가 입력과 무관한 캐시/랜덤 요인",
+      "WAF 차단으로 일관된 동작 변화 미관찰(추가 검증 필요)"
+    ]
+  },
+  "LFI": {
+    "false_positive_conditions": [
+      "경로가 basename/realpath 로 정규화되어 순회 차단",
+      "허용 디렉터리 화이트리스트로 제한됨",
+      "반환 내용이 시스템 파일이 아닌 일반 404 본문"
+    ]
+  }
+}
