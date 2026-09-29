@@ -11,7 +11,7 @@
 *.db-*
 *.sqlite*
 *.jsonl
-screenshots/
+backend/screenshots/
 reports_out/
 *.log
 
