@@ -265,7 +265,7 @@ table.scan-tbl td{padding:8px 10px}table.scan-tbl .tcell{text-align:right}table.
 table.kv{width:100%;border-collapse:collapse;font-size:13.5px}
 table.kv th{width:120px;text-align:left;color:var(--ink-2);font-weight:600;padding:12px 14px;background:#f8fafc;border:1px solid var(--line);border-right:none;vertical-align:top;white-space:nowrap}
 table.kv td{padding:12px 14px;border:1px solid var(--line);border-left:none;color:var(--ink)}
-.crit{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.crit-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .crit-b{border:1px solid var(--line);border-radius:11px;padding:14px 16px}
 .crit-h{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--brand-2);font-weight:800;margin-bottom:7px}
 .crit-d{font-size:13px;line-height:1.7;color:var(--ink)}
